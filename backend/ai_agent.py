@@ -13,27 +13,21 @@ from config import INTERACTION_TYPES
 
 load_dotenv()
 
-# ==========================================
-# LLM CONFIG
-# ==========================================
+
 llm = ChatGroq(
     groq_api_key=os.getenv("GROQ_API_KEY"),
     model_name=os.getenv("MODEL_NAME"),
     temperature=0
 )
 
-# ==========================================
-# STATE
-# ==========================================
+
 class AgentState(TypedDict):
     user_input: str
     current_form: dict
     intent: str
     result: dict
 
-# ==========================================
-# DATE HELPERS
-# ==========================================
+
 def today_date():
     return datetime.today().strftime("%Y-%m-%d")
 
@@ -54,28 +48,26 @@ def normalize_date(value):
     if val == "yesterday":
         return yesterday_date()
 
-    # already valid yyyy-mm-dd
+   
     if re.match(r"^\d{4}-\d{2}-\d{2}$", val):
         return val
 
     return ""
 
 
-# ==========================================
-# HELPERS
-# ==========================================
+
 def clean_json(text):
     if not text:
         return {}
 
     text = str(text).strip()
 
-    # Remove markdown wrappers
+    
     text = text.replace("```json", "")
     text = text.replace("```python", "")
     text = text.replace("```", "").strip()
 
-    # Try to extract first JSON object
+    
     match = re.search(r"\{[\s\S]*\}", text)
 
     if not match:
@@ -83,13 +75,13 @@ def clean_json(text):
 
     raw = match.group(0).strip()
 
-    # Attempt 1: direct parse
+
     try:
         return json.loads(raw)
     except Exception:
         pass
 
-    # Attempt 2: fix smart quotes / quotes issues
+  
     cleaned = raw
     cleaned = cleaned.replace("“", '"').replace("”", '"')
     cleaned = cleaned.replace("‘", "'").replace("’", "'")
@@ -99,7 +91,7 @@ def clean_json(text):
     except Exception:
         pass
 
-    # Attempt 3: remove trailing commas before } or ]
+    
     cleaned = re.sub(r",\s*}", "}", cleaned)
     cleaned = re.sub(r",\s*]", "]", cleaned)
 
@@ -107,9 +99,7 @@ def clean_json(text):
         return json.loads(cleaned)
     except Exception:
         return {}
-# ==========================================
-# TOOL 1: DETECT INTENT
-# ==========================================
+
 
 def detect_intent_tool(text, current_form=None):
     prompt = f"""
@@ -157,10 +147,6 @@ Rules:
     except:
         return "log_interaction"
 
-
-# ==========================================
-# TOOL 2: LOG INTERACTION
-# ==========================================
 
 
 
@@ -242,9 +228,7 @@ TEXT:
     res = llm.invoke(prompt)
     data = clean_json(res.content)
 
-    # -------------------------
-    # Clean extracted fields
-    # -------------------------
+
     data["hcp_name"] = clean_doctor_name(data.get("hcp_name", ""))
 
     valid_types = INTERACTION_TYPES
@@ -274,9 +258,7 @@ TEXT:
     data["materials"] = data.get("materials", "")
     data["samples"] = data.get("samples", "")
 
-    # -------------------------
-    # Sentiment
-    # -------------------------
+
     sent = str(data.get("sentiment", "")).strip()
 
     valid_sentiments = ["Positive", "Neutral", "Negative"]
@@ -289,10 +271,7 @@ TEXT:
         except:
             data["sentiment"] = "Neutral"
 
-        
-    # -------------------------
-    # Outcomes
-    # -------------------------
+  
     outcome = str(data.get("outcomes", "")).strip()
 
     if not outcome:
@@ -320,9 +299,6 @@ TEXT:
     data["outcomes"] = outcome
 
 
-    # -------------------------
-    # Follow-up
-    # -------------------------
     follow = str(data.get("follow_up", "")).strip()
 
     if not follow:
@@ -349,23 +325,17 @@ TEXT:
 
     data["follow_up"] = follow
 
-    # -------------------------
-    # Normalize date
-    # -------------------------
+
     data["date"] = normalize_date(data.get("date"))
 
     if not data["date"]:
         data["date"] = today_date()
 
-    # -------------------------
-    # Normalize time
-    # -------------------------
+
     if not data.get("time"):
         data["time"] = datetime.now().strftime("%H:%M")
 
-    # -------------------------
-    # Keep only frontend keys
-    # -------------------------
+
     final_data = {
         "hcp_name": data["hcp_name"],
         "interaction_type": data["interaction_type"],
@@ -386,29 +356,21 @@ TEXT:
 
 
 
-
-# ==========================================
-# HELPER: CLEAN DOCTOR NAME
-# ==========================================
 def clean_doctor_name(name):
     if not name:
         return ""
 
     name = name.strip()
 
-    # normalize doctor prefix
     name = name.replace("Dr.", "Dr. ")
     name = name.replace("Dr ", "Dr. ")
 
-    # remove double spaces
     name = " ".join(name.split())
 
     return name
 
 
-# ==========================================
-# TOOL 3: EDIT INTERACTION
-# ==========================================
+
 def edit_interaction_tool(text, current_form):
     prompt = f"""
 You are editing an existing CRM interaction form.
@@ -459,9 +421,6 @@ USER REQUEST:
     return merged
 
 
-# ==========================================
-# TOOL 4: SENTIMENT
-# ==========================================
 def sentiment_tool(text):
     prompt = f"""
 You are an expert CRM sentiment analyzer.
@@ -483,9 +442,7 @@ TEXT:
     return ans if ans in ["Positive", "Neutral", "Negative"] else "Neutral"
 
 
-# ==========================================
-# TOOL 5: FOLLOWUP
-# ==========================================
+
 def followup_tool(text):
     prompt = f"""
 Suggest one professional next step for healthcare sales representative.
@@ -499,9 +456,7 @@ TEXT:
     return res.content.strip()
 
 
-# ==========================================
-# TOOL 6: INSIGHTS
-# ==========================================
+
 def insights_tool(text):
     prompt = f"""
 Provide one concise HCP engagement insight.
@@ -512,9 +467,7 @@ TEXT:
     res = llm.invoke(prompt)
     return {"insight": res.content.strip()}
 
-# ==========================================
-# VOICE NOTE AI TOOL
-# ==========================================
+
 
 def run_voice_agent(text):
     today = datetime.now().strftime("%Y-%m-%d")
@@ -600,9 +553,6 @@ VOICE TRANSCRIPT:
             "samples": ""
         }
 
-# ==========================================
-# ROUTER NODE
-# ==========================================
 
 def route_node(state):
     return {
@@ -612,9 +562,7 @@ def route_node(state):
         )
     }
 
-# ==========================================
-# GRAPH NODES
-# ==========================================
+
 
 
 def log_node(state):
@@ -659,9 +607,7 @@ def insights_node(state):
     }
 
 
-# ==========================================
-# CONDITIONAL ROUTING
-# ==========================================
+
 def decide_route(state):
     intent = str(state.get("intent", "")).strip().lower()
 
@@ -676,9 +622,7 @@ def decide_route(state):
     return route_map.get(intent, "log")
 
 
-# ==========================================
-# BUILD GRAPH
-# ==========================================
+
 builder = StateGraph(AgentState)
 
 builder.add_node("router", route_node)
@@ -711,9 +655,6 @@ builder.add_edge("insights", END)
 graph = builder.compile()
 
 
-# ==========================================
-# MAIN FUNCTION
-# ==========================================
 def run_agent(user_text, current_form=None):
     result = graph.invoke({
         "user_input": user_text,
