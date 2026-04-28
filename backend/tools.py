@@ -2,9 +2,6 @@ from datetime import datetime, timedelta
 import re
 
 
-# =====================================
-# DATE HELPERS
-# =====================================
 
 def today_date():
     return datetime.today().strftime("%d-%m-%Y")
@@ -33,9 +30,7 @@ def resolve_relative_date(text):
     return ""
 
 
-# =====================================
-# TIME HELPERS
-# =====================================
+
 
 def normalize_time(text):
     t = text.lower().strip()
@@ -79,7 +74,7 @@ def normalize_time(text):
     if "noon" in t:
         return "12:00"
 
-    # detect HH:MM
+    
     match = re.search(r"\b(\d{1,2}):(\d{2})\b", t)
     if match:
         h = int(match.group(1))
@@ -89,9 +84,7 @@ def normalize_time(text):
     return ""
 
 
-# =====================================
-# CLEAN TEXT
-# =====================================
+
 
 def clean_value(value):
     if value is None:
@@ -100,9 +93,6 @@ def clean_value(value):
     return str(value).strip()
 
 
-# =====================================
-# MERGE FORM
-# =====================================
 
 def merge_forms(old_data, new_data):
     merged = old_data.copy()
