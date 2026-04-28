@@ -1,4 +1,3 @@
-// @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -48,7 +47,7 @@ const handleAI = async () => {
 
   const data = res.data.data;
 
-  // 2. 🔥 SAVE TO DATABASE
+  
   try {
     await axios.post("http://127.0.0.1:8000/save", data);
 
