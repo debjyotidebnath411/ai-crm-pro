@@ -9,19 +9,13 @@ import whisper
 import os
 
 
-# ====================================
-# LOAD WHISPER MODEL
-# ====================================
+
 model = whisper.load_model("base")
 
-# ====================================
-# APP
-# ====================================
+
 app = FastAPI(title="AI CRM HCP Module")
 
-# ====================================
-# CORS
-# ====================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -30,16 +24,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ====================================
-# REQUEST MODEL
-# ====================================
+
 class ChatRequest(BaseModel):
     message: str
     current_form: dict = {}
 
-# ====================================
-# ROOT
-# ====================================
+
 @app.get("/")
 def root():
     return {
@@ -47,9 +37,6 @@ def root():
         "service": "AI CRM HCP Backend"
     }
 
-# ====================================
-# CHAT ENDPOINT
-# ====================================
 @app.post("/chat")
 def chat(req: ChatRequest):
     try:
@@ -74,7 +61,7 @@ from sqlalchemy import text
 
 @app.post("/save")
 def save_interaction(data: dict):
-    print("Saving to DB:", data)   # 👈 PUT IT HERE
+    print("Saving to DB:", data)   
 
     try:
         db = SessionLocal()
@@ -140,7 +127,7 @@ async def voice_summary(file: UploadFile = File(...)):
 
 @app.post("/save")
 def save_interaction(data: dict):
-    print("Saving to DB:", data)   # 👈 DEBUG LINE
+    print("Saving to DB:", data)   
 
     try:
         db = SessionLocal()
@@ -210,9 +197,7 @@ def update_interaction(interaction_id: int, data: dict):
     except Exception as e:
         print("UPDATE ERROR:", str(e))
         return {"success": False, "error": str(e)}
-# ====================================
-# HEALTH CHECK
-# ====================================
+
 @app.get("/health")
 def health():
     return {
