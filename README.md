@@ -176,12 +176,22 @@ DATABASE_URL=your_postgres_url
 
 ## Screenshots
 
-Add these images to improve submission quality:
+### Main Interface
 
-* Main UI screen
-* Chat interaction example
-* Database table
-* AI generated output
+![Main UI](screenshots/ui-main.png)
+
+### AI Chat Output
+
+![AI Output](screenshots/ai-output.png)
+
+### Chat Demo
+
+![Chat Demo](screenshots/chat-demo.png)
+
+### Database Records
+
+![Database](screenshots/database.png)
+
 
 ---
 
