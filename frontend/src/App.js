@@ -47,37 +47,44 @@ const handleAI = async () => {
 
   const data = res.data.data;
 
-  
-  try {
+try {
+  if (!data.insight) {
     await axios.post("http://127.0.0.1:8000/save", data);
-
     console.log("Saved to DB:", data);
-  } catch (err) {
-    console.error("DB Save Failed:", err);
   }
+} catch (err) {
+  console.error("DB Save Failed:", err);
+}
 
-  dispatch(updateForm(data));
+dispatch(updateForm(data));
 
-  const aiReply = `✅ Interaction processed.
+let aiReply = "";
 
-  Doctor: ${data.hcp_name || "-"}
-  Date: ${data.date || "-"}
-  Sentiment: ${data.sentiment || "-"}
+if (data.insight) {
+  aiReply = `📊 Insights Report:\n\n${data.insight}`;
+}
 
-  ${"✔ Saved to database successfully"}
+else {
+  aiReply = `✅ Interaction processed.
 
-  📌 AI Summary:
-  ${
-    data.follow_up
-      ? `Doctor showed ${data.sentiment?.toLowerCase() || "neutral"} interest. Follow-up: ${data.follow_up}`
-      : `${data.topics || "Interaction"} logged successfully.`
-  }`;
+Doctor: ${data.hcp_name || "-"}
+Date: ${data.date || "-"}
+Sentiment: ${data.sentiment || "-"}
 
-  setMessages((prev) => [
-    ...prev,
-    { role: "ai", text: aiReply }
-  ]);
+✔ Saved to database successfully
 
+📌 AI Summary:
+${
+  data.follow_up
+    ? `Doctor showed ${data.sentiment?.toLowerCase() || "neutral"} interest. Follow-up: ${data.follow_up}`
+    : `${data.topics || "Interaction"} logged successfully.`
+}`;
+}
+
+setMessages((prev) => [
+  ...prev,
+  { role: "ai", text: aiReply }
+]);
 } catch (error) {
   setMessages((prev) => [
     ...prev,
